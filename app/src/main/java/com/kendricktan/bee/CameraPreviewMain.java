@@ -1,75 +1,97 @@
 package com.kendricktan.bee;
 
 import android.app.Activity;
-import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.hardware.Camera;
-import android.hardware.Camera.PictureCallback;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
-import android.view.Menu;
+import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.Toast;
+import android.view.SurfaceView;
+import android.view.WindowManager;
 
-public class CameraPreviewMain extends Activity {
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.CameraBridgeViewBase;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Mat;
 
-    private ImageSurfaceView mImageSurfaceView;
-    private Camera camera;
+public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
+    private static final String TAG = "OCVSample::Activity";
 
-    private FrameLayout cameraPreviewLayout;
-    private ImageView capturedImageHolder;
+    private CameraBridgeViewBase mOpenCvCameraView;
+    private boolean              mIsJavaCamera = true;
+    private MenuItem             mItemSwitchCamera = null;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_camera_preview_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
-        cameraPreviewLayout = (FrameLayout)findViewById(R.id.camera_preview);
-        capturedImageHolder = (ImageView)findViewById(R.id.captured_image);
-
-        camera = checkDeviceCamera();
-        mImageSurfaceView = new ImageSurfaceView(CameraPreviewMain.this, camera);
-        cameraPreviewLayout.addView(mImageSurfaceView);
-
-        Button captureButton = (Button)findViewById(R.id.button);
-        captureButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                camera.takePicture(null, null, pictureCallback);
-            }
-        });
-    }
-    private Camera checkDeviceCamera(){
-        Camera mCamera = null;
-        try {
-            mCamera = Camera.open();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return mCamera;
-    }
-
-    PictureCallback pictureCallback = new PictureCallback() {
+    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
-        public void onPictureTaken(byte[] data, Camera camera) {
-            Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-            if(bitmap==null){
-                Toast.makeText(CameraPreviewMain.this, "Captured image is empty", Toast.LENGTH_LONG).show();
-                return;
+        public void onManagerConnected(int status) {
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS:
+                {
+                    Log.i(TAG, "OpenCV loaded successfully");
+                    mOpenCvCameraView.enableView();
+                } break;
+                default:
+                {
+                    super.onManagerConnected(status);
+                } break;
             }
-            capturedImageHolder.setImageBitmap(scaleDownBitmapImage(bitmap, 300, 200 ));
         }
     };
 
-    private Bitmap scaleDownBitmapImage(Bitmap bitmap, int newWidth, int newHeight){
-        Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
-        return resizedBitmap;
+    public CameraPreviewMain() {
+        Log.i(TAG, "Instantiated new " + this.getClass());
     }
 
+    /** Called when the activity is first created. */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        Log.i(TAG, "called onCreate");
+        super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        setContentView(R.layout.activity_camera_preview_main);
+
+        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.activity_java_surface_view);
+
+        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+
+        mOpenCvCameraView.setCvCameraViewListener(this);
+    }
+
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+        if (mOpenCvCameraView != null)
+            mOpenCvCameraView.disableView();
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        if (!OpenCVLoader.initDebug()) {
+            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
+        } else {
+            Log.d(TAG, "OpenCV library found inside package. Using it!");
+            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        }
+    }
+
+    public void onDestroy() {
+        super.onDestroy();
+        if (mOpenCvCameraView != null)
+            mOpenCvCameraView.disableView();
+    }
+
+    public void onCameraViewStarted(int width, int height) {
+    }
+
+    public void onCameraViewStopped() {
+    }
+
+    public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+        return inputFrame.rgba();
+    }
 }
