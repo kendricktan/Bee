@@ -1,2 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<items version="2" />
+<items version="2" >
+
+    <item
+        jar="/home/kendricktan/Development/Android/Bee/app/build/intermediates/incremental-classes/debug/instant-run-bootstrap.jar"
+        jumboMode="true"
+        revision="23.0.3"
+        sha1="d10e69a3c801c44ff66d2763dfe6dd8c05a21531">
+        <dex dex="/home/kendricktan/Development/Android/Bee/app/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run-bootstrap_f11f42b407f53fe10bd21982671ef144d9a9a82b/classes.dex" />
+    </item>
+
+</items>

@@ -18,6 +18,7 @@ android:baselineAligned="false">
         <org.opencv.android.JavaCameraView
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
+            android:layout_weight="0.5"
             android:visibility="gone"
             android:id="@+id/activity_java_surface_view"
             opencv:show_fps="true"
