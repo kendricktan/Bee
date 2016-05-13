@@ -5,8 +5,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -15,8 +18,8 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 
-public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
-    private static final String TAG = "OCVSample::Activity";
+public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.CvCameraViewListener2  {
+    private static final String TAG = "Bee::Activity";
 
     private CameraBridgeViewBase mOpenCvCameraView;
     private boolean              mIsJavaCamera = true;
@@ -54,10 +57,36 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
         setContentView(R.layout.activity_camera_preview_main);
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.activity_java_surface_view);
-
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-
         mOpenCvCameraView.setCvCameraViewListener(this);
+
+        // Select folder button
+        Button folderbtn = (Button)findViewById(R.id.Button_select_folder);
+        folderbtn.setOnClickListener(new View.OnClickListener(){
+            private String m_chosenDir = "";
+            private boolean m_newFolderEnabled = true;
+            @Override
+            public void onClick(View v){
+                // Create DirectoryChooserDialog and register a callback
+                DirectoryChooserDialog directoryChooserDialog =
+                    new DirectoryChooserDialog(CameraPreviewMain.this,
+                        new DirectoryChooserDialog.ChosenDirectoryListener()
+                        {
+                            @Override
+                            public void onChosenDir(String chosenDir)
+                            {
+                                m_chosenDir = chosenDir;
+                                Toast.makeText(CameraPreviewMain.this, "Chosen directory: " + chosenDir, Toast.LENGTH_LONG).show();
+                            }
+                        });
+                // Toggle new folder button enabling
+                directoryChooserDialog.setNewFolderEnabled(m_newFolderEnabled);
+                // Load directory chooser dialog for initial 'm_chosenDir' directory.
+                // The registered callback will be called upon final directory selection.
+                directoryChooserDialog.chooseDirectory(m_chosenDir);
+                m_newFolderEnabled = ! m_newFolderEnabled;
+            }
+        });
     }
 
     @Override

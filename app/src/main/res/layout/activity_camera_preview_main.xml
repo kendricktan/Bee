@@ -56,6 +56,13 @@ android:orientation="horizontal"
             android:text="Prev" />
 
         <Button
+            android:id="@+id/Button_select_folder"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Select Folder" />
+
+        <Button
             android:id="@+id/Button_capture"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
