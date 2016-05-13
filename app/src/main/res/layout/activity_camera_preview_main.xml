@@ -37,16 +37,24 @@ android:orientation="horizontal"
         android:layout_weight="0.8">
 
         <Button
-            android:id="@+id/button_next"
+            android:id="@+id/Button_next"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:text="Next" />
 
-        <ImageView
+        <LinearLayout
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:src="@drawable/honey" />
+            android:layout_height="fill_parent"
+            android:orientation="vertical"
+            android:layout_weight="0.8">
+
+            <ImageView
+                android:id="@+id/image_preview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/honey" />
+        </LinearLayout>
 
         <Button
             android:id="@+id/Button_prev"

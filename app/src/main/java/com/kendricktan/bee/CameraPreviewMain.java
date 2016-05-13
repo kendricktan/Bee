@@ -1,14 +1,15 @@
 package com.kendricktan.bee;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.LinearLayout;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -18,14 +19,37 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 
+import java.io.File;
+import java.io.FilenameFilter;
+
 public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.CvCameraViewListener2  {
+    // Logging Tag
     private static final String TAG = "Bee::Activity";
 
+    // OpenCV Camera instants
     private CameraBridgeViewBase mOpenCvCameraView;
-    private boolean              mIsJavaCamera = true;
-    private MenuItem             mItemSwitchCamera = null;
-    private LinearLayout         imageGallery = null;
 
+    // Selected images
+    private File[] previewImageList = null;
+    private int selectedPreviewImageIndex = 0;
+
+    // Get images in file path
+    static final String[] EXTENSIONS = new String[]{
+            "jpg", "png", "jpeg"
+    };
+    static final FilenameFilter IMAGE_FILTER = new FilenameFilter() {
+        @Override
+        public boolean accept(final File dir, final String name) {
+            for (final String ext : EXTENSIONS) {
+                if (name.endsWith("." + ext)) {
+                    return (true);
+                }
+            }
+            return (false);
+        }
+    };
+
+    // Initialization
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -42,10 +66,6 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
             }
         }
     };
-
-    public CameraPreviewMain() {
-        Log.i(TAG, "Instantiated new " + this.getClass());
-    }
 
     /** Called when the activity is first created. */
     @Override
@@ -75,7 +95,23 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
                             @Override
                             public void onChosenDir(String chosenDir)
                             {
+                                // Our chosen directory
                                 m_chosenDir = chosenDir;
+
+                                // Gets the Files
+                                File dir = new File(m_chosenDir);
+
+                                // And filters them (we only want images)
+                                previewImageList = dir.listFiles(IMAGE_FILTER);
+                                selectedPreviewImageIndex = 0;
+
+                                // Change imageview image
+                                ImageView imgViewer = (ImageView) findViewById(R.id.image_preview);
+                                Bitmap selectedImage = BitmapFactory.decodeFile(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
+                                imgViewer.setImageBitmap(selectedImage);
+
+
+                                // User feedback
                                 Toast.makeText(CameraPreviewMain.this, "Chosen directory: " + chosenDir, Toast.LENGTH_LONG).show();
                             }
                         });
@@ -85,6 +121,36 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
                 // The registered callback will be called upon final directory selection.
                 directoryChooserDialog.chooseDirectory(m_chosenDir);
                 m_newFolderEnabled = ! m_newFolderEnabled;
+            }
+        });
+
+        // Next button
+        Button nextBtn = (Button)findViewById(R.id.Button_next);
+        nextBtn.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                // Change imageview image
+                if (selectedPreviewImageIndex < previewImageList.length){
+                    selectedPreviewImageIndex ++;
+                }
+
+                ImageView imgViewer = (ImageView) findViewById(R.id.image_preview);
+                Bitmap selectedImage = BitmapFactory.decodeFile(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
+                imgViewer.setImageBitmap(selectedImage);
+            }
+        });
+
+        // Prev button
+        Button prevBtn = (Button)findViewById(R.id.Button_prev);
+        prevBtn.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                // Change imageview image
+                if (selectedPreviewImageIndex > 0){
+                    selectedPreviewImageIndex --;
+                }
+
+                ImageView imgViewer = (ImageView) findViewById(R.id.image_preview);
+                Bitmap selectedImage = BitmapFactory.decodeFile(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
+                imgViewer.setImageBitmap(selectedImage);
             }
         });
     }
@@ -108,6 +174,10 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
             Log.d(TAG, "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
+    }
+
+    public CameraPreviewMain() {
+        Log.i(TAG, "Instantiated new " + this.getClass());
     }
 
     public void onDestroy() {
