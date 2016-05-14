@@ -199,6 +199,7 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         frameMatcher.setFrame(inputFrame);
+        Log.w(TAG, frameMatcher.resize(frameMatcher.getFrameGray(), 0.3*frameMatcher.getFrameGray().size().width).size().width + "");
         return frameMatcher.getFrameGray();
     }
 }
