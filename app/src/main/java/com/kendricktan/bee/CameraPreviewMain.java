@@ -23,6 +23,9 @@ import java.io.File;
 import java.io.FilenameFilter;
 
 public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.CvCameraViewListener2  {
+    // Our image matcher class
+    private FrameMatcher frameMatcher = new FrameMatcher();
+
     // Logging Tag
     private static final String TAG = "Bee::Activity";
 
@@ -109,7 +112,7 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
                                 ImageView imgViewer = (ImageView) findViewById(R.id.image_preview);
                                 Bitmap selectedImage = BitmapFactory.decodeFile(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
                                 imgViewer.setImageBitmap(selectedImage);
-
+                                frameMatcher.setTemplate(selectedImage);
 
                                 // User feedback
                                 Toast.makeText(CameraPreviewMain.this, "Chosen directory: " + chosenDir, Toast.LENGTH_LONG).show();
@@ -136,6 +139,7 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
                 ImageView imgViewer = (ImageView) findViewById(R.id.image_preview);
                 Bitmap selectedImage = BitmapFactory.decodeFile(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
                 imgViewer.setImageBitmap(selectedImage);
+                frameMatcher.setTemplate(selectedImage);
             }
         });
 
@@ -151,6 +155,7 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
                 ImageView imgViewer = (ImageView) findViewById(R.id.image_preview);
                 Bitmap selectedImage = BitmapFactory.decodeFile(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
                 imgViewer.setImageBitmap(selectedImage);
+                frameMatcher.setTemplate(selectedImage);
             }
         });
     }
@@ -193,6 +198,7 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
     }
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-        return inputFrame.rgba();
+        frameMatcher.setFrame(inputFrame);
+        return frameMatcher.getFrameGray();
     }
 }
