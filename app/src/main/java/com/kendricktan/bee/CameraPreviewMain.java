@@ -112,7 +112,7 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
                                 ImageView imgViewer = (ImageView) findViewById(R.id.image_preview);
                                 Bitmap selectedImage = BitmapFactory.decodeFile(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
                                 imgViewer.setImageBitmap(selectedImage);
-                                frameMatcher.setTemplate(selectedImage);
+                                frameMatcher.setTemplate(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
 
                                 // User feedback
                                 Toast.makeText(CameraPreviewMain.this, "Chosen directory: " + chosenDir, Toast.LENGTH_LONG).show();
@@ -131,6 +131,10 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
         Button nextBtn = (Button)findViewById(R.id.Button_next);
         nextBtn.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v){
+                if (previewImageList == null){
+                    return;
+                }
+
                 // Change imageview image
                 if (selectedPreviewImageIndex < previewImageList.length){
                     selectedPreviewImageIndex ++;
@@ -139,7 +143,7 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
                 ImageView imgViewer = (ImageView) findViewById(R.id.image_preview);
                 Bitmap selectedImage = BitmapFactory.decodeFile(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
                 imgViewer.setImageBitmap(selectedImage);
-                frameMatcher.setTemplate(selectedImage);
+                frameMatcher.setTemplate(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
             }
         });
 
@@ -147,6 +151,10 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
         Button prevBtn = (Button)findViewById(R.id.Button_prev);
         prevBtn.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v){
+                if (previewImageList == null){
+                    return;
+                }
+
                 // Change imageview image
                 if (selectedPreviewImageIndex > 0){
                     selectedPreviewImageIndex --;
@@ -155,9 +163,10 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
                 ImageView imgViewer = (ImageView) findViewById(R.id.image_preview);
                 Bitmap selectedImage = BitmapFactory.decodeFile(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
                 imgViewer.setImageBitmap(selectedImage);
-                frameMatcher.setTemplate(selectedImage);
+                frameMatcher.setTemplate(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
             }
         });
+
     }
 
     @Override
@@ -199,7 +208,6 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         frameMatcher.setFrame(inputFrame);
-        Log.w(TAG, frameMatcher.resize(frameMatcher.getFrameGray(), 0.3*frameMatcher.getFrameGray().size().width).size().width + "");
-        return frameMatcher.getFrameGray();
+        return frameMatcher.getFrame();
     }
 }
