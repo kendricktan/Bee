@@ -17,6 +17,7 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
 import java.io.File;
@@ -24,7 +25,7 @@ import java.io.FilenameFilter;
 
 public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.CvCameraViewListener2  {
     // Our image matcher class
-    private FrameMatcher frameMatcher = new FrameMatcher();
+    private FrameMatcher frameMatcher;
 
     // Logging Tag
     private static final String TAG = "Bee::Activity";
@@ -60,6 +61,8 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
                 case LoaderCallbackInterface.SUCCESS:
                 {
                     Log.i(TAG, "OpenCV loaded successfully");
+                    frameMatcher = new FrameMatcher();
+                    mOpenCvCameraView.setMaxFrameSize(640, 480);
                     mOpenCvCameraView.enableView();
                 } break;
                 default:
@@ -106,6 +109,12 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
 
                                 // And filters them (we only want images)
                                 previewImageList = dir.listFiles(IMAGE_FILTER);
+
+                                if (previewImageList.length <= 0){
+                                    previewImageList = null;
+                                    Toast.makeText(CameraPreviewMain.this, "No images found at: " + chosenDir, Toast.LENGTH_LONG).show();
+                                    return;
+                                }
                                 selectedPreviewImageIndex = 0;
 
                                 // Change imageview image
@@ -136,14 +145,18 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
                 }
 
                 // Change imageview image
-                if (selectedPreviewImageIndex < previewImageList.length){
+                if (selectedPreviewImageIndex < previewImageList.length-1){
                     selectedPreviewImageIndex ++;
+
+                    ImageView imgViewer = (ImageView) findViewById(R.id.image_preview);
+                    Bitmap selectedImage = BitmapFactory.decodeFile(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
+                    imgViewer.setImageBitmap(selectedImage);
+                    frameMatcher.setTemplate(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
                 }
 
-                ImageView imgViewer = (ImageView) findViewById(R.id.image_preview);
-                Bitmap selectedImage = BitmapFactory.decodeFile(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
-                imgViewer.setImageBitmap(selectedImage);
-                frameMatcher.setTemplate(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
+                else{
+                    Toast.makeText(CameraPreviewMain.this, "Last image in folder!", Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -158,15 +171,35 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
                 // Change imageview image
                 if (selectedPreviewImageIndex > 0){
                     selectedPreviewImageIndex --;
+                    ImageView imgViewer = (ImageView) findViewById(R.id.image_preview);
+                    Bitmap selectedImage = BitmapFactory.decodeFile(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
+                    imgViewer.setImageBitmap(selectedImage);
+                    frameMatcher.setTemplate(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
                 }
 
-                ImageView imgViewer = (ImageView) findViewById(R.id.image_preview);
-                Bitmap selectedImage = BitmapFactory.decodeFile(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
-                imgViewer.setImageBitmap(selectedImage);
-                frameMatcher.setTemplate(previewImageList[selectedPreviewImageIndex].getAbsolutePath());
+                else{
+                    Toast.makeText(CameraPreviewMain.this, "First image in folder!", Toast.LENGTH_LONG).show();
+                }
+
             }
         });
 
+        // Capture button
+        Button capBtn = (Button)findViewById(R.id.Button_capture);
+        capBtn.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                Mat m = new Mat(frameMatcher.getFrame(), frameMatcher.tempROI);
+                Mat copy = new Mat();
+                m.copyTo(copy);
+                frameMatcher.setTemplate(copy);
+
+                // Bitmap display
+                Bitmap bm = Bitmap.createBitmap(m.cols(), m.rows(),Bitmap.Config.ARGB_8888);
+                Utils.matToBitmap(m, bm);
+                ImageView imgViewer = (ImageView)findViewById(R.id.image_preview);
+                imgViewer.setImageBitmap(bm);
+            }
+        });
     }
 
     @Override
@@ -208,6 +241,8 @@ public class CameraPreviewMain extends Activity implements CameraBridgeViewBase.
 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         frameMatcher.setFrame(inputFrame);
-        return frameMatcher.getFrame();
+        frameMatcher.match();
+
+        return frameMatcher.getDrawnFrame();
     }
 }
